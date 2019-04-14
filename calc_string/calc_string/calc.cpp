@@ -176,7 +176,7 @@ void Calc::set_calc_string(const string& str)
 	int count = 0;
 	for (int i=0; i<str.length(); ++i)
 	{
-		if (str[i] == ' ')// ºöÂÔËùÓĞ¿Õ¸ñ
+		if (str[i] == ' ')// å¿½ç•¥æ‰€æœ‰ç©ºæ ¼
 		{
 			continue;
 		}
@@ -201,7 +201,7 @@ void Calc::set_calc_string(const string& str)
 		}
 		else
 		{
-			if (has_num_to_push)// º¬ÓĞ´ıpushµÄÖµ
+			if (has_num_to_push)// å«æœ‰å¾…pushçš„å€¼
 			{
 				sprintf(num_str, "%g", temp_num);
 				calc_string.push_back(string(num_str));
@@ -211,7 +211,7 @@ void Calc::set_calc_string(const string& str)
 				temp_str = "";
 				has_num_to_push = false;
 			}
-			if (str[i] == ',')// ºöÂÔ¶ººÅ
+			if (str[i] == ',')// å¿½ç•¥é€—å·
 			{
 				continue;
 			}
@@ -219,7 +219,7 @@ void Calc::set_calc_string(const string& str)
 			temp_index = find_rule_index(temp_str);
 			if (temp_index == -1)
 			{
-				if (temp_str == "(" || temp_str == ")")// ÆÕÍ¨×óÀ¨ºÅ»òÕßÓÒÀ¨ºÅ
+				if (temp_str == "(" || temp_str == ")")// æ™®é€šå·¦æ‹¬å·æˆ–è€…å³æ‹¬å·
 				{
 					calc_string.push_back(temp_str);
 					temp_num = 0;
@@ -232,7 +232,7 @@ void Calc::set_calc_string(const string& str)
 			else
 			{
 				calc_string.push_back(temp_str);
-				if (handle_rule[temp_index].op_num == 3)// Èô²Ù×÷·û²ÎÊı²»¶¨³¤£¬ÔÙpushÒ»¸ö²ÎÊıµÄ³¤¶È
+				if (handle_rule[temp_index].op_num == 3)// è‹¥æ“ä½œç¬¦å‚æ•°ä¸å®šé•¿ï¼Œå†pushä¸€ä¸ªå‚æ•°çš„é•¿åº¦
 				{
 					sprintf(num_str, "%d", cal_comma_count(str, i+1, str.length()-1));
 					calc_string.push_back(string(num_str));
@@ -241,7 +241,7 @@ void Calc::set_calc_string(const string& str)
 			}
 		}
 	}
-	if (has_num_to_push)// º¬ÓĞ´ıpushµÄÖµ
+	if (has_num_to_push)// å«æœ‰å¾…pushçš„å€¼
 	{
 		sprintf(num_str, "%g", temp_num);
 		calc_string.push_back(string(num_str));
@@ -250,14 +250,14 @@ void Calc::set_calc_string(const string& str)
 
 double Calc::calc_process() const
 {
-	stack<const string> s_string;// ´æ´¢²Ù×÷·ûµÄÕ»
-	stack<double> s_num;// ´æ´¢Êı×ÖµÄÕ»
+	stack<const string> s_string;// å­˜å‚¨æ“ä½œç¬¦çš„æ ˆ
+	stack<double> s_num;// å­˜å‚¨æ•°å­—çš„æ ˆ
 	int temp_index_1, temp_index_2;
 	double temp_double_1, temp_double_2;
 	string temp_string;
 	for (int i=0; i<calc_string.size(); ++i)
 	{
-		if (calc_string[i] == "(")// ÆÕÍ¨(
+		if (calc_string[i] == "(")// æ™®é€š(
 		{
 			s_string.push(calc_string[i]);
 		}
@@ -267,16 +267,16 @@ double Calc::calc_process() const
 			{
 				assert(!s_string.empty());
 				temp_string = s_string.top();
-				if (temp_string == "(")// ÆÕÍ¨(
+				if (temp_string == "(")// æ™®é€š(
 				{
 					s_string.pop();
 					break;
 				}
-				else// ·ÇÆÕÍ¨(
+				else// éæ™®é€š(
 				{
 					temp_index_1 = find_rule_index(temp_string);
 					assert(temp_index_1 != -1);
-					if (handle_rule[temp_index_1].op_num == 1)// Ò»¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+					if (handle_rule[temp_index_1].op_num == 1)// ä¸€ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 					{
 						temp_double_1 = s_num.top();
 						s_num.pop();
@@ -284,7 +284,7 @@ double Calc::calc_process() const
 						s_num.push(handle_rule[temp_index_1].p_fun_one_num(temp_double_1));
 						s_string.pop();
 					}
-					else if (handle_rule[temp_index_1].op_num == 2)// Á½¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+					else if (handle_rule[temp_index_1].op_num == 2)// ä¸¤ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 					{
 						temp_double_1 = s_num.top();
 						s_num.pop();
@@ -294,7 +294,7 @@ double Calc::calc_process() const
 						s_num.push(handle_rule[temp_index_1].p_fun_two_num(temp_double_2, temp_double_1));
 						s_string.pop();
 					}
-					else if (handle_rule[temp_index_1].op_num == 3)// ²»¶¨³¤¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+					else if (handle_rule[temp_index_1].op_num == 3)// ä¸å®šé•¿ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 					{
 						assert(handle_rule[temp_index_1].has_bracket);
 						int param_num;
@@ -312,38 +312,38 @@ double Calc::calc_process() const
 						s_string.pop();
 						break;
 					}
-					if (handle_rule[temp_index_1].has_bracket)// ¸Ã²Ù×÷·û°üº¬À¨ºÅ
+					if (handle_rule[temp_index_1].has_bracket)// è¯¥æ“ä½œç¬¦åŒ…å«æ‹¬å·
 					{
 						break;
 					}
 				}
 			}
 		}
-		else// Êı×Ö»òÔËËã·û
+		else// æ•°å­—æˆ–è¿ç®—ç¬¦
 		{
 			temp_index_1 = find_rule_index(calc_string[i]);
-			if (temp_index_1 == -1)// Êı×Ö
+			if (temp_index_1 == -1)// æ•°å­—
 			{
 				sscanf(calc_string[i].c_str(), "%lf", &temp_double_1);
 				s_num.push(temp_double_1);
 			}
-			else// ÔËËã·û
+			else// è¿ç®—ç¬¦
 			{
-				while (!s_string.empty())// Õ»·Ç¿Õ
+				while (!s_string.empty())// æ ˆéç©º
 				{
 					temp_string = s_string.top();
-					if (temp_string == "(")// ×óÀ¨ºÅÓÅÏÈ¼¶×îµÍ£¬ÇÒ²»ÔÚhandle_ruleÖĞ£¬Ö±½Óbreak¼´¿É
+					if (temp_string == "(")// å·¦æ‹¬å·ä¼˜å…ˆçº§æœ€ä½ï¼Œä¸”ä¸åœ¨handle_ruleä¸­ï¼Œç›´æ¥breakå³å¯
 					{
 						break;
 					}
 					temp_index_2 = find_rule_index(temp_string);
-					if (handle_rule[temp_index_2].priority >= handle_rule[temp_index_1].priority)// ÓÅÏÈ¼¶½Ï¸ß»òÍ¬¼¶
+					if (handle_rule[temp_index_2].priority >= handle_rule[temp_index_1].priority)// ä¼˜å…ˆçº§è¾ƒé«˜æˆ–åŒçº§
 					{
-						if (handle_rule[temp_index_2].priority == handle_rule[temp_index_1].priority && handle_rule[temp_index_2].has_bracket)// Èç¸ÃÔËËã·ûº¬ÓĞÀ¨ºÅ£¬ÔòÓöµ½ÓÅÏÈ¼¶ÏàµÈµÄÇé¿ö£¬²»µ¯Õ»
+						if (handle_rule[temp_index_2].priority == handle_rule[temp_index_1].priority && handle_rule[temp_index_2].has_bracket)// å¦‚è¯¥è¿ç®—ç¬¦å«æœ‰æ‹¬å·ï¼Œåˆ™é‡åˆ°ä¼˜å…ˆçº§ç›¸ç­‰çš„æƒ…å†µï¼Œä¸å¼¹æ ˆ
 						{
 							break;
 						}
-						if (handle_rule[temp_index_2].op_num == 1)// Ò»¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+						if (handle_rule[temp_index_2].op_num == 1)// ä¸€ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 						{
 							temp_double_1 = s_num.top();
 							s_num.pop();
@@ -351,7 +351,7 @@ double Calc::calc_process() const
 							s_num.push(handle_rule[temp_index_2].p_fun_one_num(temp_double_1));
 							s_string.pop();
 						}
-						else if (handle_rule[temp_index_2].op_num == 2)// Á½¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+						else if (handle_rule[temp_index_2].op_num == 2)// ä¸¤ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 						{
 							temp_double_1 = s_num.top();
 							s_num.pop();
@@ -361,7 +361,7 @@ double Calc::calc_process() const
 							s_num.push(handle_rule[temp_index_2].p_fun_two_num(temp_double_2, temp_double_1));
 							s_string.pop();
 						}
-						else if (handle_rule[temp_index_2].op_num == 3)// ²»¶¨³¤¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+						else if (handle_rule[temp_index_2].op_num == 3)// ä¸å®šé•¿ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 						{
 							assert(handle_rule[temp_index_2].has_bracket);
 							int param_num;
@@ -379,12 +379,12 @@ double Calc::calc_process() const
 							s_string.pop();
 						}
 					}
-					else// ÓÅÏÈ¼¶½ÏµÍ
+					else// ä¼˜å…ˆçº§è¾ƒä½
 					{
 						break;
 					}
 				}
-				if (handle_rule[temp_index_1].op_num == 3)// ²»¶¨³¤²Ù×÷ÊıµÄ²Ù×÷·û£¬·ÅÈë·ûºÅÇ°£¬ÏÈ½«²ÎÊı¸öÊıÑ¹Èë·ûºÅÕ»
+				if (handle_rule[temp_index_1].op_num == 3)// ä¸å®šé•¿æ“ä½œæ•°çš„æ“ä½œç¬¦ï¼Œæ”¾å…¥ç¬¦å·å‰ï¼Œå…ˆå°†å‚æ•°ä¸ªæ•°å‹å…¥ç¬¦å·æ ˆ
 				{
 					s_string.push(calc_string[i+1]);
 					s_string.push(calc_string[i]);
@@ -402,7 +402,7 @@ double Calc::calc_process() const
 		temp_string = s_string.top();
 		temp_index_1 = find_rule_index(temp_string);
 		assert(temp_index_1 != -1);
-		if (handle_rule[temp_index_1].op_num == 1)// Ò»¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+		if (handle_rule[temp_index_1].op_num == 1)// ä¸€ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 		{
 			temp_double_1 = s_num.top();
 			s_num.pop();
@@ -410,7 +410,7 @@ double Calc::calc_process() const
 			s_num.push(handle_rule[temp_index_1].p_fun_one_num(temp_double_1));
 			s_string.pop();
 		}
-		else if (handle_rule[temp_index_1].op_num == 2)// Ò»¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+		else if (handle_rule[temp_index_1].op_num == 2)// ä¸¤ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 		{
 			temp_double_1 = s_num.top();
 			s_num.pop();
@@ -420,7 +420,7 @@ double Calc::calc_process() const
 			s_num.push(handle_rule[temp_index_1].p_fun_two_num(temp_double_2, temp_double_1));
 			s_string.pop();
 		}
-		else if (handle_rule[temp_index_1].op_num == 3)// ²»¶¨³¤¸ö²Ù×÷ÊıµÄ²Ù×÷·û
+		else if (handle_rule[temp_index_1].op_num == 3)// ä¸å®šé•¿ä¸ªæ“ä½œæ•°çš„æ“ä½œç¬¦
 		{
 			assert(handle_rule[temp_index_1].has_bracket);
 			int param_num;
