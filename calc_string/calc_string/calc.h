@@ -9,7 +9,7 @@ using namespace std;
 
 typedef double fun_one_num(double x);
 typedef double fun_two_num(double x, double y);
-typedef double fun_unknown_num(vector<double> x);
+typedef double fun_unknown_num(const vector<double>& x);
 
 struct Rule
 {
