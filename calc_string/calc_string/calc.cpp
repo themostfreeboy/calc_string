@@ -77,7 +77,7 @@ double my_avg(const vector<double>& x)
 double my_median(const vector<double>& x)
 {
 	vector<double> y(x);
-	int n = y.size();
+	unsigned int n = y.size();
 	sort(y.begin(), y.end());
 	if (n % 2 == 0)
 	{
@@ -92,7 +92,7 @@ double my_median(const vector<double>& x)
 
 double my_variance(const vector<double>& x)
 {
-	int n = x.size();
+	unsigned int n = x.size();
 	double avg = accumulate(x.begin(), x.end(), 0.0) / n;
 	double sum = 0;
 	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
@@ -104,7 +104,7 @@ double my_variance(const vector<double>& x)
 
 double my_stddev(const vector<double>& x)
 {
-	int n = x.size();
+	unsigned int n = x.size();
 	double avg = accumulate(x.begin(), x.end(), 0.0) / n;
 	double sum = 0;
 	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
@@ -139,15 +139,15 @@ static const Rule rule_data[] =
 void Calc::init_rule()
 {
 	handle_rule.assign(rule_data, rule_data + sizeof(rule_data)/sizeof(Rule));
-	for (int i=0; i<handle_rule.size(); ++i)
+	for (unsigned int i=0; i<handle_rule.size(); ++i)
 	{
-		map_rule.insert(pair<const string, int>(handle_rule[i].name, i));
+		map_rule.insert(pair<const string, unsigned int>(handle_rule[i].name, i));
 	}
 }
 
 int Calc::find_rule_index(const string& str) const
 {
-	map<const string, int>::const_iterator it = map_rule.find(str);
+	map<const string, unsigned int>::const_iterator it = map_rule.find(str);
 	if (it == map_rule.end())
 	{
 		return -1;
@@ -159,14 +159,12 @@ int Calc::find_rule_index(const string& str) const
 	return -1;
 }
 
-int Calc::cal_comma_count(const string& str, int start, int end) const
+unsigned int Calc::cal_comma_count(const string& str, unsigned int start, unsigned int end) const
 {
-	assert(start >= 0);
-	assert(start <= end);
-	assert(end < str.length());
-	int count = 1;
-	int num = 1;
-	for (int i=start; i<=end; ++i)
+	assert(start >= 0 && start <= end && end < str.length());
+	unsigned int count = 1;
+	unsigned int num = 1;
+	for (unsigned int i=start; i<=end; ++i)
 	{
 		if (str[i] == '(')
 		{
@@ -188,6 +186,7 @@ int Calc::cal_comma_count(const string& str, int start, int end) const
 			}
 		}
 	}
+	return 0;
 }
 
 void Calc::set_calc_string(const string& str)
@@ -200,10 +199,9 @@ void Calc::set_calc_string(const string& str)
 	double point_rate = 0.1;
 	string temp_str = "";
 	char num_str[1024];
-	char temp_char;
 	int temp_index;
-	int count = 0;
-	for (int i=0; i<str.length(); ++i)
+	unsigned int count = 0;
+	for (unsigned int i=0; i<str.length(); ++i)
 	{
 		if (str[i] == ' ')// 忽略所有空格
 		{
@@ -263,7 +261,7 @@ void Calc::set_calc_string(const string& str)
 				calc_string.push_back(temp_str);
 				if (handle_rule[temp_index].op_num == 3)// 若操作符参数不定长，再push一个参数的长度
 				{
-					sprintf(num_str, "%d", cal_comma_count(str, i+1, str.length()-1));
+					sprintf(num_str, "%u", cal_comma_count(str, i+1, str.length()-1));
 					calc_string.push_back(string(num_str));
 				}
 				temp_str = "";
@@ -277,10 +275,9 @@ void Calc::set_calc_string(const string& str)
 	}
 }
 
-void Calc::do_handle_fun(stack<const string>& s_string, stack<double>& s_num, int rule_index) const
+void Calc::do_handle_fun(stack<const string>& s_string, stack<double>& s_num, unsigned int rule_index) const
 {
-	assert(rule_index >= 0 && rule_index < handle_rule.size());
-	assert(!s_string.empty());
+	assert(rule_index >= 0 && rule_index < handle_rule.size() && !s_string.empty());
 	if (handle_rule[rule_index].op_num == 1)// 一个操作数的操作符
 	{
 		assert(!s_num.empty());
@@ -305,12 +302,12 @@ void Calc::do_handle_fun(stack<const string>& s_string, stack<double>& s_num, in
 	else if (handle_rule[rule_index].op_num == 3)// 不定长个操作数的操作符
 	{
 		assert(handle_rule[rule_index].has_bracket);
-		int param_num;
+		unsigned int param_num;
 		s_string.pop();
 		assert(!s_string.empty());
-		sscanf(s_string.top().c_str(), "%d", &param_num);
+		sscanf(s_string.top().c_str(), "%u", &param_num);
 		vector<double> temp_double_vector;
-		for (int i=0; i<param_num; ++i)
+		for (unsigned int i=0; i<param_num; ++i)
 		{
 			assert(!s_num.empty());
 			double temp_double_1 = s_num.top();
@@ -328,9 +325,9 @@ double Calc::calc_process() const
 	stack<const string> s_string;// 存储操作符的栈
 	stack<double> s_num;// 存储数字的栈
 	int temp_index_1, temp_index_2;
-	double temp_double_1, temp_double_2;
+	double temp_double;
 	string temp_string;
-	for (int i=0; i<calc_string.size(); ++i)
+	for (unsigned int i=0; i<calc_string.size(); ++i)
 	{
 		if (calc_string[i] == "(")// 普通(
 		{
@@ -363,8 +360,8 @@ double Calc::calc_process() const
 			temp_index_1 = find_rule_index(calc_string[i]);
 			if (temp_index_1 == -1)// 数字
 			{
-				sscanf(calc_string[i].c_str(), "%lf", &temp_double_1);
-				s_num.push(temp_double_1);
+				sscanf(calc_string[i].c_str(), "%lf", &temp_double);
+				s_num.push(temp_double);
 			}
 			else// 运算符
 			{
