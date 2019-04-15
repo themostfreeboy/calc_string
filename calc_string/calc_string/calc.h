@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 
 using namespace std;
@@ -36,6 +37,7 @@ private:
 	vector<const string> calc_string;
 	int find_rule_index(const string& str) const;
 	int cal_comma_count(const string& str, int start, int end) const;
+	void do_handle_fun(stack<const string>& s_string, stack<double>& s_num, int rule_index) const;
 	void copy(const Calc& c){};// ½ûÖ¹¿½±´¹¹Ôì
 	void operator=(const Calc& c){};// ½ûÖ¹µÈºÅ¸³Öµ
 };

@@ -1,8 +1,7 @@
 #include "calc.h"
 #include <cmath>
-#include <stack>
 #include <algorithm>
-#include <climits>
+#include <numeric>
 #include <assert.h>
 
 double my_add(double x, double y)
@@ -57,48 +56,22 @@ double my_tan(double x)
 
 double my_max(const vector<double>& x)
 {
-	double max = -FLT_MAX;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		if (*it > max)
-		{
-			max = *it;
-		}
-	}
-	return max;
+	return *max_element(x.begin(), x.end());
 }
 
 double my_min(const vector<double>& x)
 {
-	double min = FLT_MAX;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		if (*it < min)
-		{
-			min = *it;
-		}
-	}
-	return min;
+	return *min_element(x.begin(), x.end());
 }
 
 double my_sum(const vector<double>& x)
 {
-	double sum = 0;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		sum += *it;
-	}
-	return sum;
+	return accumulate(x.begin(), x.end(), 0.0);
 }
 
 double my_avg(const vector<double>& x)
 {
-	double sum = 0;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		sum += *it;
-	}
-	return sum / x.size();
+	return accumulate(x.begin(), x.end(), 0.0) / x.size();
 }
 
 double my_median(const vector<double>& x)
@@ -106,7 +79,7 @@ double my_median(const vector<double>& x)
 	vector<double> y(x);
 	int n = y.size();
 	sort(y.begin(), y.end());
-	if (n % 2 ==0)
+	if (n % 2 == 0)
 	{
 		return (y[n/2-1] + y[n/2]) / 2;
 	}
@@ -120,38 +93,28 @@ double my_median(const vector<double>& x)
 double my_variance(const vector<double>& x)
 {
 	int n = x.size();
+	double avg = accumulate(x.begin(), x.end(), 0.0) / n;
 	double sum = 0;
 	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
 	{
-		sum += *it;
+		sum += (*it - avg) * (*it - avg);
 	}
-	double avg = sum / n;
-	sum = 0;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		sum += pow((*it - avg), 2);
-	}
-	return sum / n;
+	return sum / (n - 1);
 }
 
 double my_stddev(const vector<double>& x)
 {
 	int n = x.size();
+	double avg = accumulate(x.begin(), x.end(), 0.0) / n;
 	double sum = 0;
 	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
 	{
-		sum += *it;
+		sum += (*it - avg) * (*it - avg);
 	}
-	double avg = sum / n;
-	sum = 0;
-	for (vector<double>::const_iterator it = x.begin(); it != x.end(); ++it)
-	{
-		sum += pow((*it - avg), 2);
-	}
-	return sqrt(sum / n);
+	return sqrt(sum / (n - 1));
 }
 
-const static Rule rule_data[] = 
+static const Rule rule_data[] = 
 {
 	{"+", 1, false, 2, NULL, my_add, NULL},// 加
 	{"-", 1, false, 2, NULL, my_minus, NULL},// 减
@@ -198,6 +161,9 @@ int Calc::find_rule_index(const string& str) const
 
 int Calc::cal_comma_count(const string& str, int start, int end) const
 {
+	assert(start >= 0);
+	assert(start <= end);
+	assert(end < str.length());
 	int count = 1;
 	int num = 1;
 	for (int i=start; i<=end; ++i)
@@ -226,6 +192,7 @@ int Calc::cal_comma_count(const string& str, int start, int end) const
 
 void Calc::set_calc_string(const string& str)
 {
+	assert(!str.empty());
 	calc_string.clear();
 	double temp_num = 0;
 	bool has_point = false;
@@ -310,6 +277,52 @@ void Calc::set_calc_string(const string& str)
 	}
 }
 
+void Calc::do_handle_fun(stack<const string>& s_string, stack<double>& s_num, int rule_index) const
+{
+	assert(rule_index >= 0 && rule_index < handle_rule.size());
+	assert(!s_string.empty());
+	if (handle_rule[rule_index].op_num == 1)// 一个操作数的操作符
+	{
+		assert(!s_num.empty());
+		double temp_double_1 = s_num.top();
+		s_num.pop();
+		assert(handle_rule[rule_index].p_fun_one_num);
+		s_num.push(handle_rule[rule_index].p_fun_one_num(temp_double_1));
+		s_string.pop();
+	}
+	else if (handle_rule[rule_index].op_num == 2)// 两个操作数的操作符
+	{
+		assert(!s_num.empty());
+		double temp_double_1 = s_num.top();
+		s_num.pop();
+		assert(!s_num.empty());
+		double temp_double_2 = s_num.top();
+		s_num.pop();
+		assert(handle_rule[rule_index].p_fun_two_num);
+		s_num.push(handle_rule[rule_index].p_fun_two_num(temp_double_2, temp_double_1));
+		s_string.pop();
+	}
+	else if (handle_rule[rule_index].op_num == 3)// 不定长个操作数的操作符
+	{
+		assert(handle_rule[rule_index].has_bracket);
+		int param_num;
+		s_string.pop();
+		assert(!s_string.empty());
+		sscanf(s_string.top().c_str(), "%d", &param_num);
+		vector<double> temp_double_vector;
+		for (int i=0; i<param_num; ++i)
+		{
+			assert(!s_num.empty());
+			double temp_double_1 = s_num.top();
+			s_num.pop();
+			temp_double_vector.push_back(temp_double_1);
+		}
+		assert(handle_rule[rule_index].p_fun_unknown_num);
+		s_num.push(handle_rule[rule_index].p_fun_unknown_num(temp_double_vector));
+		s_string.pop();
+	}
+}
+
 double Calc::calc_process() const
 {
 	stack<const string> s_string;// 存储操作符的栈
@@ -337,43 +350,7 @@ double Calc::calc_process() const
 				else// 非普通(
 				{
 					temp_index_1 = find_rule_index(temp_string);
-					assert(temp_index_1 != -1);
-					if (handle_rule[temp_index_1].op_num == 1)// 一个操作数的操作符
-					{
-						temp_double_1 = s_num.top();
-						s_num.pop();
-						assert(handle_rule[temp_index_1].p_fun_one_num);
-						s_num.push(handle_rule[temp_index_1].p_fun_one_num(temp_double_1));
-						s_string.pop();
-					}
-					else if (handle_rule[temp_index_1].op_num == 2)// 两个操作数的操作符
-					{
-						temp_double_1 = s_num.top();
-						s_num.pop();
-						temp_double_2 = s_num.top();
-						s_num.pop();
-						assert(handle_rule[temp_index_1].p_fun_two_num);
-						s_num.push(handle_rule[temp_index_1].p_fun_two_num(temp_double_2, temp_double_1));
-						s_string.pop();
-					}
-					else if (handle_rule[temp_index_1].op_num == 3)// 不定长个操作数的操作符
-					{
-						assert(handle_rule[temp_index_1].has_bracket);
-						int param_num;
-						s_string.pop();
-						sscanf(s_string.top().c_str(), "%d", &param_num);
-						vector<double> temp_double_vector;
-						for (int i=0; i<param_num; ++i)
-						{
-							temp_double_1 = s_num.top();
-							s_num.pop();
-							temp_double_vector.push_back(temp_double_1);
-						}
-						assert(handle_rule[temp_index_1].p_fun_unknown_num);
-						s_num.push(handle_rule[temp_index_1].p_fun_unknown_num(temp_double_vector));
-						s_string.pop();
-						break;
-					}
+					do_handle_fun(s_string, s_num, temp_index_1);
 					if (handle_rule[temp_index_1].has_bracket)// 该操作符包含括号
 					{
 						break;
@@ -399,47 +376,14 @@ double Calc::calc_process() const
 						break;
 					}
 					temp_index_2 = find_rule_index(temp_string);
+					assert(temp_index_2 != -1);
 					if (handle_rule[temp_index_2].priority >= handle_rule[temp_index_1].priority)// 优先级较高或同级
 					{
 						if (handle_rule[temp_index_2].priority == handle_rule[temp_index_1].priority && handle_rule[temp_index_2].has_bracket)// 如该运算符含有括号，则遇到优先级相等的情况，不弹栈
 						{
 							break;
 						}
-						if (handle_rule[temp_index_2].op_num == 1)// 一个操作数的操作符
-						{
-							temp_double_1 = s_num.top();
-							s_num.pop();
-							assert(handle_rule[temp_index_2].p_fun_one_num);
-							s_num.push(handle_rule[temp_index_2].p_fun_one_num(temp_double_1));
-							s_string.pop();
-						}
-						else if (handle_rule[temp_index_2].op_num == 2)// 两个操作数的操作符
-						{
-							temp_double_1 = s_num.top();
-							s_num.pop();
-							temp_double_2 = s_num.top();
-							s_num.pop();
-							assert(handle_rule[temp_index_2].p_fun_two_num);
-							s_num.push(handle_rule[temp_index_2].p_fun_two_num(temp_double_2, temp_double_1));
-							s_string.pop();
-						}
-						else if (handle_rule[temp_index_2].op_num == 3)// 不定长个操作数的操作符
-						{
-							assert(handle_rule[temp_index_2].has_bracket);
-							int param_num;
-							s_string.pop();
-							sscanf(s_string.top().c_str(), "%d", &param_num);
-							vector<double> temp_double_vector;
-							for (int i=0; i<param_num; ++i)
-							{
-								temp_double_1 = s_num.top();
-								s_num.pop();
-								temp_double_vector.push_back(temp_double_1);
-							}
-							assert(handle_rule[temp_index_2].p_fun_unknown_num);
-							s_num.push(handle_rule[temp_index_2].p_fun_unknown_num(temp_double_vector));
-							s_string.pop();
-						}
+						do_handle_fun(s_string, s_num, temp_index_2);
 					}
 					else// 优先级较低
 					{
@@ -448,6 +392,7 @@ double Calc::calc_process() const
 				}
 				if (handle_rule[temp_index_1].op_num == 3)// 不定长操作数的操作符，放入符号前，先将参数个数压入符号栈
 				{
+					assert(i+1 < calc_string.size());
 					s_string.push(calc_string[i+1]);
 					s_string.push(calc_string[i]);
 					++i;
@@ -464,40 +409,8 @@ double Calc::calc_process() const
 		temp_string = s_string.top();
 		temp_index_1 = find_rule_index(temp_string);
 		assert(temp_index_1 != -1);
-		if (handle_rule[temp_index_1].op_num == 1)// 一个操作数的操作符
-		{
-			temp_double_1 = s_num.top();
-			s_num.pop();
-			assert(handle_rule[temp_index_1].p_fun_one_num);
-			s_num.push(handle_rule[temp_index_1].p_fun_one_num(temp_double_1));
-			s_string.pop();
-		}
-		else if (handle_rule[temp_index_1].op_num == 2)// 两个操作数的操作符
-		{
-			temp_double_1 = s_num.top();
-			s_num.pop();
-			temp_double_2 = s_num.top();
-			s_num.pop();
-			assert(handle_rule[temp_index_1].p_fun_two_num);
-			s_num.push(handle_rule[temp_index_1].p_fun_two_num(temp_double_2, temp_double_1));
-			s_string.pop();
-		}
-		else if (handle_rule[temp_index_1].op_num == 3)// 不定长个操作数的操作符
-		{
-			assert(handle_rule[temp_index_1].has_bracket);
-			int param_num;
-			s_string.pop();
-			sscanf(s_string.top().c_str(), "%d", &param_num);
-			vector<double> temp_double_vector;
-			for (int i=0; i<param_num; ++i)
-			{
-				temp_double_1 = s_num.top();
-				s_num.pop();
-				temp_double_vector.push_back(temp_double_1);
-			}
-			s_num.push(handle_rule[temp_index_1].p_fun_unknown_num(temp_double_vector));
-			s_string.pop();
-		}
+		do_handle_fun(s_string, s_num, temp_index_1);
 	}
+	assert(s_num.size() == 1);
 	return s_num.top();
 }
